@@ -15,6 +15,7 @@ import java.io.IOException;
 public class MainActivity extends RosActivity {
 
     private RosCameraPreviewView rosCameraPreviewView;
+    private SpeakNode speakNode;
 
     public MainActivity(String notificationTicker, String notificationTitle) {
         super(notificationTicker, notificationTitle);
@@ -24,6 +25,7 @@ public class MainActivity extends RosActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        speakNode = new SpeakNode();
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
 
@@ -37,6 +39,8 @@ public class MainActivity extends RosActivity {
             socket.close();
             NodeConfiguration nodeConfiguration =
                     NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+
+            nodeMainExecutor.execute(speakNode, nodeConfiguration);
             nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
         } catch (IOException e) {
             // Socket problem
