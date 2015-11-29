@@ -2,8 +2,8 @@ package com.github.chaosal.androidroshead;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
+import android.widget.Toast;
 
-import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
@@ -11,7 +11,7 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.topic.Subscriber;
 
-import std_msgs.String;
+import java.util.Locale;
 
 
 public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitListener {
@@ -26,25 +26,32 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
 
     @Override
     public GraphName getDefaultNodeName() {
-        return GraphName.of("Speak");
+        return GraphName.of("android_ros_head/speak");
     }
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
         super.onStart(connectedNode);
         speakSubscriber =
-                connectedNode.newSubscriber("android_ros_head/speak", String._TYPE);
+                connectedNode.newSubscriber("android_ros_head/speak", std_msgs.String._TYPE);
         tts = new TextToSpeech(context, this);
+        tts.setLanguage(new Locale("ru"));
+
     }
 
     @Override
     public void onInit(int status) {
-        speakSubscriber.addMessageListener(new MessageListener<String>() {
-            @Override
-            public void onNewMessage(String string) {
-                tts.speak(string.getData(), TextToSpeech.QUEUE_FLUSH, null);
-            }
-        });
+        if(status == TextToSpeech.SUCCESS) {
+            tts.speak("Привет", TextToSpeech.QUEUE_FLUSH, null);
+            speakSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
+                @Override
+                public void onNewMessage(std_msgs.String string) {
+                    tts.speak(string.getData(), TextToSpeech.QUEUE_FLUSH, null);
+                }
+            });
+        }
+        else
+            Toast.makeText(context, "error tts init", Toast.LENGTH_SHORT);
     }
 
     @Override
@@ -55,5 +62,11 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
             tts.stop();
             tts.shutdown();
         }
+    }
+
+    @Override
+    public void onError(Node node, Throwable throwable) {
+        super.onError(node, throwable);
+        Toast.makeText(context, throwable.getMessage(), Toast.LENGTH_SHORT);
     }
 }
