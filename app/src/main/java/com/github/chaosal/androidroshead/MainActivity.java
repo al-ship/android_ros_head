@@ -17,15 +17,15 @@ public class MainActivity extends RosActivity {
     private RosCameraPreviewView rosCameraPreviewView;
     private SpeakNode speakNode;
 
-    public MainActivity(String notificationTicker, String notificationTitle) {
-        super(notificationTicker, notificationTitle);
+    public MainActivity() {
+        super("android_ros_head", "android_ros_head");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        speakNode = new SpeakNode();
+        speakNode = new SpeakNode(this.getApplicationContext());
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
 

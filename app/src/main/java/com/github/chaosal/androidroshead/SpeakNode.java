@@ -1,5 +1,6 @@
 package com.github.chaosal.androidroshead;
 
+import android.content.Context;
 import android.speech.tts.TextToSpeech;
 
 import org.ros.concurrent.CancellableLoop;
@@ -16,7 +17,12 @@ import std_msgs.String;
 public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitListener {
 
     private TextToSpeech tts;
-    Subscriber<std_msgs.String> speakSubscriber;
+    private Subscriber<std_msgs.String> speakSubscriber;
+    private Context context;
+
+    public SpeakNode(Context applicationContext) {
+        this.context = applicationContext;
+    }
 
     @Override
     public GraphName getDefaultNodeName() {
@@ -26,9 +32,9 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
     @Override
     public void onStart(ConnectedNode connectedNode) {
         super.onStart(connectedNode);
-        Subscriber<std_msgs.String> speakSubscriber =
-                connectedNode.newSubscriber("speak", String._TYPE);
-        tts = new TextToSpeech(null, this);
+        speakSubscriber =
+                connectedNode.newSubscriber("android_ros_head/speak", String._TYPE);
+        tts = new TextToSpeech(context, this);
     }
 
     @Override
