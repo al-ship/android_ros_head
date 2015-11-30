@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AndroidRosHead</string>
+    <string name="nodes_prefix">android_ros_head</string>
+    <string name="socket_error">Ошибка сокета при подключении к мастеру</string>
+    <string name="hello">Привет!</string>
+    <string name="error_tts_init">ошибка инициализации tts</string>
+</resources>

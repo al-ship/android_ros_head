@@ -1,6 +1,7 @@
 package com.github.chaosal.androidroshead;
 
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +17,7 @@ public class MainActivity extends RosActivity {
 
     private RosCameraPreviewView rosCameraPreviewView;
     private SpeakNode speakNode;
+    private SensorsNode sensorsNode;
 
     public MainActivity() {
         super("android_ros_head", "android_ros_head");
@@ -25,6 +27,8 @@ public class MainActivity extends RosActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sensorsNode = new SensorsNode(this.getApplicationContext(), (SensorManager) getSystemService(SENSOR_SERVICE));
         speakNode = new SpeakNode(this.getApplicationContext());
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
@@ -40,11 +44,12 @@ public class MainActivity extends RosActivity {
             NodeConfiguration nodeConfiguration =
                     NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
 
+            nodeMainExecutor.execute(sensorsNode, nodeConfiguration);
             nodeMainExecutor.execute(speakNode, nodeConfiguration);
             nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
         } catch (IOException e) {
             // Socket problem
-            Log.e("android_ros_head", "socket error trying to get networking information from the master uri");
+            Log.e("MainActivity", getString(R.string.socket_error));
         }
     }
 }
