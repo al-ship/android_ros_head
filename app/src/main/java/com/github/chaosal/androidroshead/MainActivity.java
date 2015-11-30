@@ -35,7 +35,7 @@ public class MainActivity extends RosActivity {
 
     @Override
     protected void init(NodeMainExecutor nodeMainExecutor) {
-        if(Camera.getNumberOfCameras() > 0)
+        if (Camera.getNumberOfCameras() > 0)
             rosCameraPreviewView.setCamera(Camera.open());
         try {
             java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());

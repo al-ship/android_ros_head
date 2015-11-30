@@ -41,7 +41,7 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
 
     @Override
     public void onInit(int status) {
-        if(status == TextToSpeech.SUCCESS) {
+        if (status == TextToSpeech.SUCCESS) {
             tts.speak(context.getString(R.string.hello), TextToSpeech.QUEUE_FLUSH, null);
             speakSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
                 @Override
@@ -49,8 +49,7 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
                     tts.speak(string.getData(), TextToSpeech.QUEUE_FLUSH, null);
                 }
             });
-        }
-        else
+        } else
             Toast.makeText(context, R.string.error_tts_init, Toast.LENGTH_SHORT);
     }
 
