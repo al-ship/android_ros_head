@@ -10,11 +10,14 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.BatteryManager;
 
+import org.ros.concurrent.CancellableLoop;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.topic.Publisher;
+
+import java.util.Objects;
 
 import diagnostic_msgs.DiagnosticStatus;
 import geometry_msgs.PoseStamped;
@@ -31,10 +34,13 @@ public class SensorsNode extends AbstractNodeMain {
 
     private final Context context;
     private final SensorManager sensorManager;
+    private float[] orientationQ = new float[4];
+    private Object orientationLock = new Object();
     private Publisher<PoseStamped> orientationPublisher;
     private Publisher<DiagnosticStatus> batteryPublisher;
     private OrientationListener orientationListener;
     private BatteryListener batteryListener;
+    private CancellableLoop orientationLoop;
 
     public SensorsNode(Context applicaContext, SensorManager sensorManager) {
         this.context = applicaContext;
@@ -47,14 +53,34 @@ public class SensorsNode extends AbstractNodeMain {
     }
 
     @Override
-    public void onStart(ConnectedNode connectedNode) {
+    public void onStart(final ConnectedNode connectedNode) {
         super.onStart(connectedNode);
         //Orientation
         final Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         if (sensor != null) {
             orientationPublisher = connectedNode.newPublisher(GraphName.of(context.getString(R.string.nodes_prefix) + ORIENTATION_TOPIC), PoseStamped._TYPE);
             orientationListener = new OrientationListener(connectedNode, orientationPublisher);
-            sensorManager.registerListener(orientationListener, sensor, 1000000);
+            sensorManager.registerListener(orientationListener, sensor, SensorManager.SENSOR_DELAY_UI);
+            orientationLoop = new CancellableLoop() {//publishes not so fast
+                @Override
+                protected void loop() throws InterruptedException {
+
+                    Thread.sleep(1000);
+                    if (orientationPublisher == null)
+                        return;
+                    final PoseStamped pose = orientationPublisher.newMessage();
+                    pose.getHeader().setFrameId("/map");
+                    pose.getHeader().setStamp(connectedNode.getCurrentTime());
+                    synchronized (orientationLock) {
+                        pose.getPose().getOrientation().setW(orientationQ[0]);
+                        pose.getPose().getOrientation().setX(orientationQ[1]);
+                        pose.getPose().getOrientation().setY(orientationQ[2]);
+                        pose.getPose().getOrientation().setZ(orientationQ[3]);
+                    }
+                    orientationPublisher.publish(pose);
+                }
+            };
+            connectedNode.executeCancellableLoop(orientationLoop);
         }
         //Battery
         batteryPublisher = connectedNode.newPublisher(GraphName.of(context.getString(R.string.nodes_prefix) + BATTERY_TOPIC), DiagnosticStatus._TYPE);
@@ -67,6 +93,9 @@ public class SensorsNode extends AbstractNodeMain {
     @Override
     public void onShutdown(Node node) {
         super.onShutdown(node);
+
+        if(orientationLoop != null)
+            orientationLoop.cancel();
         if (orientationListener != null)
             sensorManager.unregisterListener(orientationListener);
         if (orientationPublisher != null)
@@ -76,6 +105,12 @@ public class SensorsNode extends AbstractNodeMain {
         if (batteryPublisher != null)
             batteryPublisher.shutdown();
 
+    }
+
+    private void setOrientationQ(float[] q) {
+        synchronized (orientationLock) {
+            this.orientationQ = q;
+        }
     }
 
     private final class OrientationListener implements SensorEventListener {
@@ -93,16 +128,7 @@ public class SensorsNode extends AbstractNodeMain {
             if (Sensor.TYPE_ROTATION_VECTOR == event.sensor.getType()) {
                 float[] quaternion = new float[4];
                 SensorManager.getQuaternionFromVector(quaternion, event.values);
-                if (publisher == null)
-                    return;
-                PoseStamped pose = publisher.newMessage();
-                pose.getHeader().setFrameId("/map");
-                pose.getHeader().setStamp(node.getCurrentTime());
-                pose.getPose().getOrientation().setW(quaternion[0]);
-                pose.getPose().getOrientation().setX(quaternion[1]);
-                pose.getPose().getOrientation().setY(quaternion[2]);
-                pose.getPose().getOrientation().setZ(quaternion[3]);
-                publisher.publish(pose);
+                setOrientationQ(quaternion);
             }
         }
 
@@ -133,7 +159,7 @@ public class SensorsNode extends AbstractNodeMain {
                     status == BatteryManager.BATTERY_STATUS_FULL;
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            byte batteryPct = (byte) (level / (float) scale);
+            byte batteryPct = (byte) Math.round(level * 100 / (float) scale);
 
             final DiagnosticStatus message = batteryPublisher.newMessage();
             message.setName(isCharging ? BATTERY_CHARGING : BATTERY_DISCHARGING);

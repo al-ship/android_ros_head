@@ -52,4 +52,9 @@ public class MainActivity extends RosActivity {
             Log.e("MainActivity", getString(R.string.socket_error));
         }
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
 }
