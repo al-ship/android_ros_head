@@ -16,6 +16,7 @@ import java.util.Locale;
 
 public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitListener {
 
+    public final static String TOPIC = "/speak";
     private TextToSpeech tts;
     private Subscriber<std_msgs.String> speakSubscriber;
     private Context context;
@@ -26,14 +27,14 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
 
     @Override
     public GraphName getDefaultNodeName() {
-        return GraphName.of(context.getString(R.string.nodes_prefix) + "/speak");
+        return GraphName.of(context.getString(R.string.nodes_prefix) + TOPIC);
     }
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
         super.onStart(connectedNode);
         speakSubscriber =
-                connectedNode.newSubscriber(context.getString(R.string.nodes_prefix) + "/speak", std_msgs.String._TYPE);
+                connectedNode.newSubscriber(context.getString(R.string.nodes_prefix) + TOPIC, std_msgs.String._TYPE);
         tts = new TextToSpeech(context, this);
         tts.setLanguage(new Locale("ru"));
 

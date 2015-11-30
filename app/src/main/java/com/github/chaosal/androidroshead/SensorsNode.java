@@ -139,7 +139,8 @@ public class SensorsNode extends AbstractNodeMain {
 
     private final class BatteryListener extends BroadcastReceiver {
 
-        private Publisher<DiagnosticStatus> batteryPublisher;
+        private final Publisher<DiagnosticStatus> batteryPublisher;
+
 
         public BatteryListener(Publisher<DiagnosticStatus> batteryPublisher) {
 
