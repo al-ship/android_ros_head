@@ -5,6 +5,7 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.ros.android.RosActivity;
 import org.ros.android.view.camera.RosCameraPreviewView;
@@ -18,6 +19,7 @@ public class MainActivity extends RosActivity {
     private RosCameraPreviewView rosCameraPreviewView;
     private SpeakNode speakNode;
     private SensorsNode sensorsNode;
+    private SpeechRecognitionNode speechRecognitionNode;
 
     public MainActivity() {
         super("android_ros_head", "android_ros_head");
@@ -30,6 +32,7 @@ public class MainActivity extends RosActivity {
 
         sensorsNode = new SensorsNode(this.getApplicationContext(), (SensorManager) getSystemService(SENSOR_SERVICE));
         speakNode = new SpeakNode(this.getApplicationContext());
+        speechRecognitionNode = new SpeechRecognitionNode(this.getApplicationContext());
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
 
@@ -47,6 +50,8 @@ public class MainActivity extends RosActivity {
             nodeMainExecutor.execute(sensorsNode, nodeConfiguration);
             nodeMainExecutor.execute(speakNode, nodeConfiguration);
             nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
+            nodeMainExecutor.execute(speechRecognitionNode, nodeConfiguration);
+
         } catch (IOException e) {
             // Socket problem
             Log.e("MainActivity", getString(R.string.socket_error));

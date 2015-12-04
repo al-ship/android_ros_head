@@ -101,6 +101,7 @@
     <orderEntry type="library" exported="" name="appcompat-v7-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="nav_msgs-1.11.7" level="project" />
+    <orderEntry type="library" exported="" name="pocketsphinx-android-5prealpha-nolib" level="project" />
     <orderEntry type="library" exported="" name="sensor_msgs-1.11.7" level="project" />
     <orderEntry type="library" exported="" name="android_10-0.2.0" level="project" />
     <orderEntry type="library" exported="" name="android_15-0.2.0" level="project" />
@@ -114,10 +115,10 @@
     <orderEntry type="library" exported="" name="std_msgs-0.5.9" level="project" />
     <orderEntry type="library" exported="" name="tf2_msgs-0.5.9" level="project" />
     <orderEntry type="library" exported="" name="actionlib_msgs-1.11.7" level="project" />
-    <orderEntry type="library" exported="" name="com.springsource.org.apache.commons.io-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="netty-3.5.2.Final" level="project" />
-    <orderEntry type="library" exported="" name="com.springsource.org.apache.commons.lang-2.4.0" level="project" />
+    <orderEntry type="library" exported="" name="com.springsource.org.apache.commons.io-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="diagnostic_msgs-1.11.7" level="project" />
+    <orderEntry type="library" exported="" name="com.springsource.org.apache.commons.lang-2.4.0" level="project" />
     <orderEntry type="library" exported="" name="com.springsource.org.apache.commons.httpclient-3.1.0" level="project" />
   </component>
 </module>

@@ -5,4 +5,5 @@
     <string name="hello">Привет!</string>
     <string name="error_tts_init">ошибка инициализации tts</string>
     <string name="charge_me">Зарядите меня, пожалуйста!</string>
+    <string name="recognitionName">железяка</string>
 </resources>
