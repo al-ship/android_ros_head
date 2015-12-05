@@ -1,0 +1,10 @@
+acc-model/feat.params
+acc-model/mdef
+acc-model/means
+acc-model/mixture_weights
+acc-model/noisedict
+acc-model/sendump
+acc-model/transition_matrices
+acc-model/variances
+cmudict.dict
+grammar.gram

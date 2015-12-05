@@ -39,3 +39,7 @@ dependencies {
     compile 'org.ros.rosjava_messages:diagnostic_msgs:[0.1,)'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+ant.importBuild 'assets.xml'
+preBuild.dependsOn(list, checksum)
+clean.dependsOn(clean_assets)

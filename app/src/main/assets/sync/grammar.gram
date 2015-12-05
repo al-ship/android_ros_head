@@ -1,0 +1,8 @@
+#JSGF V1.0;
+
+grammar grammar;
+
+<verb> = (скажи | сколько);
+<command> = (время);
+
+public <query> = <verb> <command>;
