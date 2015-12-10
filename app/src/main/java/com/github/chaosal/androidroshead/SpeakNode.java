@@ -2,7 +2,7 @@ package com.github.chaosal.androidroshead;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
-import android.widget.Toast;
+import android.util.Log;
 
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
@@ -43,7 +43,7 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.speak(context.getString(R.string.hello), TextToSpeech.QUEUE_FLUSH, null);
+            //tts.speak(context.getString(R.string.hello), TextToSpeech.QUEUE_FLUSH, null);
             speakSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
                 @Override
                 public void onNewMessage(std_msgs.String string) {
@@ -51,7 +51,7 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
                 }
             });
         } else
-            Toast.makeText(context, R.string.error_tts_init, Toast.LENGTH_SHORT);
+            Log.e(TOPIC, context.getString(R.string.error_tts_init));
     }
 
     @Override
@@ -67,6 +67,6 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
     @Override
     public void onError(Node node, Throwable throwable) {
         super.onError(node, throwable);
-        Toast.makeText(context, throwable.getMessage(), Toast.LENGTH_SHORT);
+        Log.e(TOPIC, throwable.getMessage(), throwable);
     }
 }

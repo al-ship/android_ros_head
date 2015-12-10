@@ -17,10 +17,9 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.topic.Publisher;
 
-import java.util.Objects;
-
 import diagnostic_msgs.DiagnosticStatus;
 import geometry_msgs.PoseStamped;
+
 
 /**
  * Node for controlling and publishing messages from internal android sensors
@@ -31,6 +30,7 @@ public class SensorsNode extends AbstractNodeMain {
     public final static String BATTERY_TOPIC = "/battery";
     public final static String BATTERY_CHARGING = "charging";
     public final static String BATTERY_DISCHARGING = "discharging";
+    public final static byte BATTERY_LOW = 15;
 
     private final Context context;
     private final SensorManager sensorManager;
@@ -41,6 +41,7 @@ public class SensorsNode extends AbstractNodeMain {
     private OrientationListener orientationListener;
     private BatteryListener batteryListener;
     private CancellableLoop orientationLoop;
+    private Publisher<std_msgs.String> speakPublisher;
 
     public SensorsNode(Context applicaContext, SensorManager sensorManager) {
         this.context = applicaContext;
@@ -88,6 +89,9 @@ public class SensorsNode extends AbstractNodeMain {
         final Intent batteryIntent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         batteryPublisher.publish(batteryListener.convertIntent(batteryIntent));//publish current
         context.registerReceiver(batteryListener, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+        speakPublisher = connectedNode.newPublisher(GraphName.of(context.getString(R.string.nodes_prefix) + SpeakNode.TOPIC), std_msgs.String._TYPE);
+
     }
 
     @Override
@@ -152,6 +156,12 @@ public class SensorsNode extends AbstractNodeMain {
 
             final DiagnosticStatus message = convertIntent(intent);
             batteryPublisher.publish(message);
+
+            if (message.getLevel() < BATTERY_LOW) {
+                final std_msgs.String messageLow = speakPublisher.newMessage();
+                messageLow.setData(context.getString(R.string.charge_me));
+                speakPublisher.publish(messageLow);
+            }
         }
 
         public DiagnosticStatus convertIntent(Intent intent) {
