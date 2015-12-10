@@ -5,10 +5,15 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.util.Log;
 
+import org.ros.exception.RemoteException;
+import org.ros.exception.ServiceNotFoundException;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
+import org.ros.node.service.ServiceClient;
+import org.ros.node.service.ServiceResponseListener;
+import org.ros.node.topic.Publisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +24,6 @@ import edu.cmu.pocketsphinx.RecognitionListener;
 import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
-
 public class SpeechRecognitionNode extends AbstractNodeMain implements RecognitionListener {
     private final static String CONTEXT = SpeechRecognitionNode.class.getSimpleName();
     public final static String TOPIC = "/speechRecognition";
@@ -28,6 +32,8 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
     private final Context context;
     private SpeechRecognizer recognizer;
     private ToneGenerator toneGenerator;
+    private ServiceClient<std_msgs.String, std_msgs.String> commandClient;
+    private Publisher<std_msgs.String> speakPublisher;
 
     public SpeechRecognitionNode(Context context) {
         this.context = context;
@@ -44,6 +50,9 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
         super.onStart(connectedNode);
 
         try {
+            commandClient = connectedNode.newServiceClient(GraphName.of("/command"), std_msgs.String._TYPE);
+            speakPublisher = connectedNode.newPublisher(GraphName.of(context.getString(R.string.nodes_prefix) + SpeakNode.TOPIC), std_msgs.String._TYPE);
+
             Assets assets = new Assets(context);
             File assetsDir = assets.syncAssets();
 
@@ -64,6 +73,8 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
             startListen();
         } catch (IOException e) {
             Log.e("SpeechRecognitionNode", "Filed to run recognizer", e);
+        } catch (ServiceNotFoundException e) {
+            Log.e("SpeechRecognitionNode", "Filed to found command service", e);
         }
     }
 
@@ -104,6 +115,23 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
             return;
         Log.i(CONTEXT, String.format("score: %d, probe: %d, result: %s",
                 hypothesis.getBestScore(), hypothesis.getProb(), hypothesis.getHypstr()));
+        processCommand(hypothesis.getHypstr());
+    }
+
+    private void processCommand(String command) {
+        std_msgs.String message = commandClient.newMessage();
+        message.setData(command);
+        commandClient.call(message, new ServiceResponseListener<std_msgs.String>() {
+            @Override
+            public void onSuccess(std_msgs.String string) {
+                speakPublisher.publish(string);
+            }
+
+            @Override
+            public void onFailure(RemoteException e) {
+                Log.e("SpeechRecognitionNode", "error getting command response", e);
+            }
+        });
     }
 
     @Override
