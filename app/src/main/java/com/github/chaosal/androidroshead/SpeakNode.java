@@ -20,9 +20,11 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
     private TextToSpeech tts;
     private Subscriber<std_msgs.String> speakSubscriber;
     private Context context;
+    private GlobalState globalState;
 
-    public SpeakNode(Context applicationContext) {
+    public SpeakNode(Context applicationContext, GlobalState globalState) {
         this.context = applicationContext;
+        this.globalState = globalState;
     }
 
     @Override
@@ -37,7 +39,12 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
                 connectedNode.newSubscriber(context.getString(R.string.nodes_prefix) + TOPIC, std_msgs.String._TYPE);
         tts = new TextToSpeech(context, this);
         tts.setLanguage(new Locale("ru"));
-
+        globalState.setSpeakingStateResolver(new GlobalState.StateResolver<Boolean>() {
+            @Override
+            public Boolean getState() {
+                return tts.isSpeaking();
+            }
+        });
     }
 
     @Override
@@ -47,7 +54,10 @@ public class SpeakNode extends AbstractNodeMain implements TextToSpeech.OnInitLi
             speakSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
                 @Override
                 public void onNewMessage(std_msgs.String string) {
-                    tts.speak(string.getData(), TextToSpeech.QUEUE_FLUSH, null);
+                    if(!globalState.isListening()) {
+                        globalState.setSpeaking(true);
+                        tts.speak(string.getData(), TextToSpeech.QUEUE_FLUSH, null);
+                    }
                 }
             });
         } else

@@ -5,6 +5,7 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TimingLogger;
 import android.widget.Toast;
 
 import org.ros.android.RosActivity;
@@ -20,6 +21,7 @@ public class MainActivity extends RosActivity {
     private SpeakNode speakNode;
     private SensorsNode sensorsNode;
     private SpeechRecognitionNode speechRecognitionNode;
+    private GlobalState globalState;
 
     public MainActivity() {
         super("android_ros_head", "android_ros_head");
@@ -30,9 +32,10 @@ public class MainActivity extends RosActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sensorsNode = new SensorsNode(this.getApplicationContext(), (SensorManager) getSystemService(SENSOR_SERVICE));
-        speakNode = new SpeakNode(this.getApplicationContext());
-        speechRecognitionNode = new SpeechRecognitionNode(this.getApplicationContext());
+        globalState = new GlobalState();
+        sensorsNode = new SensorsNode(this.getApplicationContext(), (SensorManager) getSystemService(SENSOR_SERVICE), globalState);
+        speakNode = new SpeakNode(this.getApplicationContext(), globalState);
+        speechRecognitionNode = new SpeechRecognitionNode(this.getApplicationContext(), globalState);
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
 

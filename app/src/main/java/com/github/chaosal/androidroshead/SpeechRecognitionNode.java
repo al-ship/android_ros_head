@@ -34,10 +34,12 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
     private ToneGenerator toneGenerator;
     private ServiceClient<std_msgs.String, std_msgs.String> commandClient;
     private Publisher<std_msgs.String> speakPublisher;
+    private GlobalState globalState;
 
-    public SpeechRecognitionNode(Context context) {
+    public SpeechRecognitionNode(Context context, GlobalState globalState) {
         this.context = context;
         toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100);
+        this.globalState = globalState;
     }
 
     @Override
@@ -81,6 +83,7 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
     private void startSearch() {
         Log.i(CONTEXT, "start search");
         recognizer.stop();
+        globalState.setListening(true);
         recognizer.startListening(GRAMMAR_SEARCH, 10000);
         toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
     }
@@ -96,6 +99,7 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
 
     @Override
     public void onEndOfSpeech() {
+        globalState.setListening(false);
         if (!recognizer.getSearchName().equals(KWS_SEARCH_NAME))
             startListen();
     }
@@ -105,7 +109,7 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
         if (hypothesis == null)
             return;
 
-        if (hypothesis.getHypstr().equals(context.getString(R.string.recognitionName)))
+        if (hypothesis.getHypstr().equals(context.getString(R.string.recognitionName)) && !globalState.isSpeaking())
             startSearch();
     }
 

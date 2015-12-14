@@ -42,10 +42,12 @@ public class SensorsNode extends AbstractNodeMain {
     private BatteryListener batteryListener;
     private CancellableLoop orientationLoop;
     private Publisher<std_msgs.String> speakPublisher;
+    private GlobalState globalState;
 
-    public SensorsNode(Context applicaContext, SensorManager sensorManager) {
+    public SensorsNode(Context applicaContext, SensorManager sensorManager, GlobalState globalState) {
         this.context = applicaContext;
         this.sensorManager = sensorManager;
+        this.globalState = globalState;
     }
 
     @Override
@@ -157,7 +159,7 @@ public class SensorsNode extends AbstractNodeMain {
             final DiagnosticStatus message = convertIntent(intent);
             batteryPublisher.publish(message);
 
-            if (message.getLevel() < BATTERY_LOW) {
+            if (message.getLevel() < BATTERY_LOW && globalState.canNotify()) {
                 final std_msgs.String messageLow = speakPublisher.newMessage();
                 messageLow.setData(context.getString(R.string.charge_me));
                 speakPublisher.publish(messageLow);
