@@ -6,7 +6,7 @@ import java.util.GregorianCalendar;
 
 public class GlobalState {
 
-    private static final int SILENCE_FROM_HOURS = 20;
+    private static final int SILENCE_FROM_HOURS = 22;
     private static final int SILENCE_TO_HOURS = 9;
     private boolean speaking;
     private boolean listening;

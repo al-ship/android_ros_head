@@ -23,6 +23,7 @@ import edu.cmu.pocketsphinx.Hypothesis;
 import edu.cmu.pocketsphinx.RecognitionListener;
 import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
+import smart_home_core.Command;
 
 public class SpeechRecognitionNode extends AbstractNodeMain implements RecognitionListener {
     private final static String CONTEXT = SpeechRecognitionNode.class.getSimpleName();
@@ -32,9 +33,10 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
     private final Context context;
     private SpeechRecognizer recognizer;
     private ToneGenerator toneGenerator;
-    private ServiceClient<std_msgs.String, std_msgs.String> commandClient;
+    private ServiceClient<smart_home_core.CommandRequest, smart_home_core.CommandResponse> commandClient;
     private Publisher<std_msgs.String> speakPublisher;
     private GlobalState globalState;
+    private final static int MAX_SCORE = 4000;
 
     public SpeechRecognitionNode(Context context, GlobalState globalState) {
         this.context = context;
@@ -52,7 +54,7 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
         super.onStart(connectedNode);
 
         try {
-            commandClient = connectedNode.newServiceClient(GraphName.of("/command"), std_msgs.String._TYPE);
+            commandClient = connectedNode.newServiceClient(GraphName.of("/command"), Command._TYPE);
             speakPublisher = connectedNode.newPublisher(GraphName.of(context.getString(R.string.nodes_prefix) + SpeakNode.TOPIC), std_msgs.String._TYPE);
 
             Assets assets = new Assets(context);
@@ -63,7 +65,7 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
                             // To disable logging of raw audio comment out this call (takes a lot of space on the device)
                             //.setRawLogDir(assetsDir)
                             // Threshold to tune for keyphrase to balance between false alarms and misses
-                    .setKeywordThreshold(1e-30f)
+                    .setKeywordThreshold(1e-25f)
                             // Use context-independent phonetic search, context-dependent is too slow for mobile
                     .setBoolean("-allphone_ci", true)
                     .getRecognizer();
@@ -81,11 +83,12 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
     }
 
     private void startSearch() {
-        Log.i(CONTEXT, "start search");
         recognizer.stop();
+
         globalState.setListening(true);
-        recognizer.startListening(GRAMMAR_SEARCH, 10000);
         toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+        recognizer.startListening(GRAMMAR_SEARCH, 10000);
+        Log.i(CONTEXT, "start search");
     }
 
     private void startListen() {
@@ -115,20 +118,26 @@ public class SpeechRecognitionNode extends AbstractNodeMain implements Recogniti
 
     @Override
     public void onResult(Hypothesis hypothesis) {
-        if (hypothesis == null || Math.abs(hypothesis.getBestScore()) > 2000)
+        if (hypothesis == null)
             return;
         Log.i(CONTEXT, String.format("score: %d, probe: %d, result: %s",
                 hypothesis.getBestScore(), hypothesis.getProb(), hypothesis.getHypstr()));
-        processCommand(hypothesis.getHypstr());
+        if (Math.abs(hypothesis.getBestScore()) > MAX_SCORE)
+            return;
+
+        if (!hypothesis.getHypstr().equals(context.getString(R.string.recognitionName)))
+            processCommand(hypothesis.getHypstr());
     }
 
     private void processCommand(String command) {
-        std_msgs.String message = commandClient.newMessage();
-        message.setData(command);
-        commandClient.call(message, new ServiceResponseListener<std_msgs.String>() {
+        smart_home_core.CommandRequest message = commandClient.newMessage();
+        message.setCommand(command);
+        commandClient.call(message, new ServiceResponseListener<smart_home_core.CommandResponse>() {
             @Override
-            public void onSuccess(std_msgs.String string) {
-                speakPublisher.publish(string);
+            public void onSuccess(smart_home_core.CommandResponse response) {
+                std_msgs.String toSpeak = speakPublisher.newMessage();
+                toSpeak.setData(response.getResponse());
+                speakPublisher.publish(toSpeak);
             }
 
             @Override
