@@ -14,6 +14,8 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class MainActivity extends RosActivity {
 
@@ -37,6 +39,17 @@ public class MainActivity extends RosActivity {
         speakNode = new SpeakNode(this.getApplicationContext(), globalState);
         speechRecognitionNode = new SpeechRecognitionNode(this.getApplicationContext(), globalState);
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
+    }
+
+    @Override
+    public URI getMasterUri() {
+        final String uri = this.getPreferences(0).getString("URI_KEY", null);
+        try {
+            return uri != null ? new URI(uri) : null;
+        } catch (URISyntaxException e) {
+            Log.e("MainActivity", e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override
