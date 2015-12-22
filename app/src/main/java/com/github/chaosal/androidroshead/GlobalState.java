@@ -38,16 +38,10 @@ public class GlobalState {
 
     public boolean canNotify()
     {
-        Date now = new Date();
-
-        Calendar from = GregorianCalendar.getInstance();
-        from.set(GregorianCalendar.HOUR, SILENCE_FROM_HOURS);
-
-        Calendar to = GregorianCalendar.getInstance();
-        to.add(GregorianCalendar.DAY_OF_MONTH, 1);
-        to.set(GregorianCalendar.HOUR, SILENCE_TO_HOURS);
-
-        return now.before(from.getTime()) || now.after(to.getTime());
+        final Calendar cal = GregorianCalendar.getInstance();
+        cal.setTime(new Date());
+        final int hour = cal.get(Calendar.HOUR);
+        return hour < SILENCE_FROM_HOURS && hour >= SILENCE_TO_HOURS;
     }
 
 }
